@@ -1,0 +1,846 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { Clock, AlertTriangle, Menu, X, CheckCircle, XCircle, ChevronRight, ChevronLeft, Send, Check } from 'lucide-react';
+
+// --- DATA SOAL (50 SOAL SESUAI KURIKULUM MERDEKA IPS KELAS 8) ---
+const questions = [
+  // BAB 1: Kondisi Geografis dan Pelestarian SDA (1-13)
+  {
+    q: "Letak astronomis Indonesia yang berada di antara 6°LU - 11°LS dan 95°BT - 141°BT menyebabkan Indonesia memiliki iklim...",
+    options: ["Tropis", "Subtropis", "Sedang", "Dingin"],
+    answer: 0,
+    explanation: "Letak astronomis di sekitar garis khatulistiwa membuat Indonesia memiliki iklim tropis dengan curah hujan tinggi dan sinar matahari sepanjang tahun."
+  },
+  {
+    q: "Hutan hujan tropis di Indonesia memiliki fungsi ekologis yang sangat penting, yaitu sebagai...",
+    options: ["Sumber bahan baku industri kertas", "Lahan perkebunan kelapa sawit", "Paru-paru dunia dan penyimpan cadangan air", "Tempat pembuangan limbah pabrik"],
+    answer: 2,
+    explanation: "Fungsi ekologis hutan hujan tropis adalah menjaga keseimbangan lingkungan, seperti menyerap karbon dioksida (paru-paru dunia), mencegah erosi, dan menyimpan cadangan air."
+  },
+  {
+    q: "Sumber daya alam yang tidak dapat diperbarui dan banyak ditemukan di Pulau Kalimantan adalah...",
+    options: ["Batu bara", "Panas bumi", "Mutiara", "Karet"],
+    answer: 0,
+    explanation: "Pulau Kalimantan adalah salah satu penghasil batu bara terbesar di Indonesia, yang merupakan SDA tidak dapat diperbarui (barang tambang)."
+  },
+  {
+    q: "Upaya pelestarian tanah agar tidak kehilangan kesuburannya karena erosi di daerah perbukitan dapat dilakukan dengan cara...",
+    options: ["Reboisasi dan Terasering", "Menebang pohon secara liar", "Menjadikan lahan pabrik", "Melakukan pembakaran hutan"],
+    answer: 0,
+    explanation: "Terasering (sengkedan) mengurangi kemiringan lereng sehingga air tidak langsung menggerus tanah, sedangkan reboisasi mengikat tanah dengan akar pohon."
+  },
+  {
+    q: "Dampak negatif dari eksploitasi sumber daya tambang secara berlebihan tanpa reklamasi adalah...",
+    options: ["Meningkatnya pendapatan negara", "Terbukanya lapangan kerja baru", "Kerusakan lingkungan dan lubang galian yang berbahaya", "Tumbuhnya kawasan industri baru"],
+    answer: 2,
+    explanation: "Eksploitasi tanpa reklamasi (perbaikan lahan) akan meninggalkan lubang besar yang merusak bentang alam dan berbahaya bagi makhluk hidup."
+  },
+  {
+    q: "Salah satu energi alternatif yang ramah lingkungan dan sangat berpotensi dikembangkan di pesisir pantai Indonesia adalah...",
+    options: ["Energi fosil", "Energi angin dan gelombang", "Energi nuklir", "Batu bara"],
+    answer: 1,
+    explanation: "Sebagai negara kepulauan, kawasan pesisir Indonesia memiliki potensi besar untuk pembangkit listrik tenaga angin (bayu) dan gelombang laut."
+  },
+  {
+    q: "Bencana alam kabut asap yang sering terjadi di Indonesia sebagian besar disebabkan oleh...",
+    options: ["Erupsi gunung berapi", "Gas buang kendaraan bermotor", "Kebakaran hutan dan lahan (Karhutla)", "Asap pabrik industri"],
+    answer: 2,
+    explanation: "Kabut asap tebal yang sering melanda Sumatera dan Kalimantan mayoritas disebabkan oleh kebakaran hutan dan lahan, baik sengaja maupun tidak."
+  },
+  {
+    q: "Kawasan pelestarian alam yang mempunyai ekosistem asli, dikelola dengan sistem zonasi yang dimanfaatkan untuk tujuan penelitian dan ilmu pengetahuan disebut...",
+    options: ["Cagar Alam", "Suaka Margasatwa", "Taman Nasional", "Kebun Raya"],
+    answer: 2,
+    explanation: "Taman Nasional dikelola dengan sistem zonasi (zona inti, pemanfaatan, dll) dan dapat digunakan untuk penelitian, pendidikan, dan pariwisata."
+  },
+  {
+    q: "Sumber daya laut Indonesia sangat melimpah. Upaya pelestarian terumbu karang yang paling tepat adalah...",
+    options: ["Menangkap ikan dengan pukat harimau", "Menggunakan bom ikan agar tangkapan banyak", "Melarang penambangan karang dan wisata yang merusak", "Membuang limbah cair ke laut"],
+    answer: 2,
+    explanation: "Terumbu karang sangat sensitif. Menangkap ikan dengan bom/pukat dan menambang karang akan merusak ekosistemnya yang butuh puluhan tahun untuk tumbuh."
+  },
+  {
+    q: "Kondisi geologis Indonesia yang berada di titik pertemuan tiga lempeng tektonik utama memberikan keuntungan berupa...",
+    options: ["Sering terjadi gempa bumi tektonik", "Rawan terjadi tsunami di pesisir", "Tanah vulkanik yang subur dari abu gunung berapi", "Banyak terjadi tanah longsor"],
+    answer: 2,
+    explanation: "Meski rawan bencana letusan, abu vulkanik dari gunung berapi membuat tanah di Indonesia sangat subur untuk pertanian."
+  },
+  {
+    q: "Manakah dari berikut ini yang merupakan contoh pemanfaatan sumber daya alam yang mengusung prinsip pembangunan berkelanjutan?",
+    options: ["Penebangan kayu sistem tebang pilih dan tanam", "Mengambil ikan sebanyak-banyaknya untuk diekspor", "Menggunakan pupuk kimia berlebihan agar panen cepat", "Mengeksploitasi tambang hingga habis"],
+    answer: 0,
+    explanation: "Tebang pilih tanam (TPT) memastikan hutan tetap lestari karena pohon muda dibiarkan tumbuh dan ada penanaman kembali."
+  },
+  {
+    q: "Pencemaran sungai oleh limbah rumah tangga (seperti deterjen dan plastik) dapat dicegah dengan cara...",
+    options: ["Membuang sampah malam hari agar tidak terlihat", "Membuat instalasi pengolahan air limbah (IPAL) komunal", "Mengalirkan limbah ke laut lepas", "Menutup aliran sungai"],
+    answer: 1,
+    explanation: "IPAL Komunal berfungsi mengolah air limbah dari perumahan sebelum dibuang ke badan air/sungai, sehingga tidak mencemari lingkungan."
+  },
+  {
+    q: "Angin muson barat yang bertiup pada bulan Oktober – April dari Asia ke Australia membawa dampak bagi Indonesia yaitu...",
+    options: ["Musim kemarau", "Musim penghujan", "Musim gugur", "Musim semi"],
+    answer: 1,
+    explanation: "Angin muson barat melewati Samudra Hindia yang luas sehingga membawa banyak uap air yang menyebabkan musim hujan di Indonesia."
+  },
+
+  // BAB 2: Kemajemukan Masyarakat Indonesia (14-25)
+  {
+    q: "Faktor geografis yang paling mempengaruhi kemajemukan/keberagaman budaya di Indonesia adalah...",
+    options: ["Iklim yang tropis", "Kondisi negara yang berbentuk kepulauan", "Kesuburan tanah", "Banyaknya gunung berapi"],
+    answer: 1,
+    explanation: "Kondisi kepulauan membuat masyarakat purba terisolasi di pulau-pulau berbeda, sehingga mengembangkan bahasa dan budaya yang berbeda pula."
+  },
+  {
+    q: "Semboyan 'Bhinneka Tunggal Ika' diambil dari kitab Sutasoma karangan...",
+    options: ["Mpu Prapanca", "Mpu Tantular", "Gajah Mada", "Hayam Wuruk"],
+    answer: 1,
+    explanation: "Semboyan ini berasal dari Kakawin Sutasoma karangan Mpu Tantular pada masa Kerajaan Majapahit, yang bermakna berbeda-beda tetapi tetap satu jua."
+  },
+  {
+    q: "Sikap yang paling tepat dalam menghadapi perbedaan agama di lingkungan sekolah adalah...",
+    options: ["Menghindari teman yang berbeda agama", "Memaksa teman mengikuti keyakinan kita", "Menghormati teman yang sedang beribadah", "Mengejek ajaran agama lain"],
+    answer: 2,
+    explanation: "Toleransi adalah kunci kerukunan. Menghormati teman yang beribadah merupakan wujud nyata dari toleransi antarumat beragama."
+  },
+  {
+    q: "Rumah adat Honai berasal dari daerah...",
+    options: ["Sumatera Barat", "Sulawesi Selatan", "Papua", "Kalimantan Timur"],
+    answer: 2,
+    explanation: "Honai adalah rumah adat suku-suku di Pegunungan Papua, bentuknya melingkar dengan atap jerami untuk menahan hawa dingin."
+  },
+  {
+    q: "Konflik antarsuku dapat dihindari apabila setiap warga negara mengembangkan sikap...",
+    options: ["Etnosentrisme", "Chauvinisme", "Primordialisme", "Toleransi dan saling menghargai"],
+    answer: 3,
+    explanation: "Toleransi (menghargai perbedaan) dapat mencegah konflik. Etnosentrisme (menganggap sukunya paling baik) justru memicu konflik."
+  },
+  {
+    q: "Mobilitas sosial vertikal naik (social climbing) pada masyarakat dapat didorong oleh faktor...",
+    options: ["Pendidikan yang berkualitas", "Kemiskinan struktural", "Bencana alam", "Diskriminasi rasial"],
+    answer: 0,
+    explanation: "Pendidikan adalah saluran utama mobilitas sosial vertikal ke atas, memungkinkan seseorang meningkatkan status sosial dan ekonominya."
+  },
+  {
+    q: "Peran tokoh agama dan tokoh masyarakat dalam menjaga kerukunan pada masyarakat yang majemuk adalah...",
+    options: ["Mencari kelemahan kelompok lain", "Menjadi mediator dan menanamkan nilai perdamaian", "Mempersenjatai kelompoknya", "Mendirikan negara baru"],
+    answer: 1,
+    explanation: "Tokoh masyarakat berfungsi sebagai penengah (mediator) dan teladan untuk meredakan ketegangan dan menjaga harmoni."
+  },
+  {
+    q: "Tari Kecak adalah salah satu kesenian daerah yang sangat terkenal hingga ke mancanegara. Tarian ini berasal dari daerah...",
+    options: ["Jawa Barat", "Sumatera Utara", "Bali", "Nusa Tenggara Timur"],
+    answer: 2,
+    explanation: "Tari Kecak merupakan seni pertunjukan khas Bali yang menceritakan epik Ramayana, dilakukan oleh puluhan laki-laki yang duduk melingkar."
+  },
+  {
+    q: "Perkawinan campuran antarsuku bangsa (amalgamasi) memiliki dampak positif yaitu...",
+    options: ["Menghilangkan identitas suku asli", "Memicu konflik antar keluarga besar", "Meningkatkan integrasi sosial antar budaya", "Menimbulkan masalah pembagian warisan"],
+    answer: 2,
+    explanation: "Amalgamasi (perkawinan antarsuku) dapat menyatukan dua latar belakang budaya yang berbeda sehingga memperkuat integrasi (penyatuan) bangsa."
+  },
+  {
+    q: "Tradisi 'Lompat Batu' (Fahombo) merupakan ritual pendewasaan bagi pemuda di daerah...",
+    options: ["Pulau Nias, Sumatera Utara", "Suku Baduy, Banten", "Suku Tengger, Jawa Timur", "Pulau Madura, Jawa Timur"],
+    answer: 0,
+    explanation: "Fahombo atau lompat batu adalah tradisi khas Suku Nias yang dahulunya digunakan sebagai latihan perang dan kini menjadi simbol kedewasaan."
+  },
+  {
+    q: "Perbedaan mata pencaharian antara penduduk pesisir (nelayan) dan pegunungan (petani teh) merupakan bentuk keberagaman akibat faktor...",
+    options: ["Sejarah", "Kondisi alam/geografis", "Pengaruh budaya asing", "Agama"],
+    answer: 1,
+    explanation: "Kondisi bentang alam yang berbeda (pantai vs pegunungan) memaksa manusia beradaptasi sehingga menghasilkan mata pencaharian yang beragam."
+  },
+  {
+    q: "Sikap 'Etnosentrisme' berbahaya bagi keutuhan bangsa Indonesia karena...",
+    options: ["Membuat kebudayaan lokal diakui dunia", "Memicu rasa bangga yang berlebihan sehingga merendahkan suku lain", "Meningkatkan pariwisata daerah", "Mendorong pertumbuhan ekonomi lokal"],
+    answer: 1,
+    explanation: "Etnosentrisme adalah sikap menilai budaya lain dengan standar budayanya sendiri dan menganggap budayanya paling superior."
+  },
+
+  // BAB 3: Nasionalisme dan Jati Diri Bangsa (26-38)
+  {
+    q: "Organisasi pergerakan nasional pertama di Indonesia yang didirikan pada tanggal 20 Mei 1908 adalah...",
+    options: ["Sarekat Islam", "Indische Partij", "Budi Utomo", "Perhimpunan Indonesia"],
+    answer: 2,
+    explanation: "Budi Utomo didirikan oleh pelajar STOVIA di bawah inisiatif dr. Wahidin Sudirohusodo dan dr. Sutomo pada 20 Mei 1908 (diperingati sebagai Hari Kebangkitan Nasional)."
+  },
+  {
+    q: "Ikrar Sumpah Pemuda dibacakan pada Kongres Pemuda II tanggal...",
+    options: ["20 Mei 1908", "17 Agustus 1945", "28 Oktober 1928", "10 November 1945"],
+    answer: 2,
+    explanation: "Sumpah Pemuda diikrarkan pada tanggal 28 Oktober 1928, yang menyatukan para pemuda dalam satu tanah air, satu bangsa, dan satu bahasa."
+  },
+  {
+    q: "Tiga tokoh yang dikenal sebagai 'Tiga Serangkai' pendiri Indische Partij adalah...",
+    options: ["Soekarno, Hatta, Sjahrir", "Ki Hajar Dewantara, Douwes Dekker, Tjipto Mangoenkoesoemo", "Wahidin Sudirohusodo, Sutomo, Gunawan Mangunkusumo", "Ahmad Dahlan, Hasyim Asy'ari, Cokroaminoto"],
+    answer: 1,
+    explanation: "Tiga Serangkai adalah Suwardi Suryaningrat (Ki Hajar Dewantara), E.F.E Douwes Dekker, dan dr. Tjipto Mangoenkoesoemo. Indische Partij adalah partai politik pertama di Hindia Belanda."
+  },
+  {
+    q: "Makna penting dari Sumpah Pemuda bagi bangsa Indonesia adalah...",
+    options: ["Berakhirnya penjajahan Belanda", "Awal dimulainya perlawanan fisik", "Lahirnya kesadaran berbangsa dan kesatuan yang mengatasi perbedaan kedaerahan", "Terbentuknya kabinet pemerintahan pertama"],
+    answer: 2,
+    explanation: "Sumpah Pemuda mengubah perjuangan yang bersifat kedaerahan menjadi perjuangan nasional yang bersatu atas nama bangsa Indonesia."
+  },
+  {
+    q: "Organisasi pendidikan yang didirikan oleh Ki Hajar Dewantara pada tahun 1922 untuk mendidik kaum pribumi adalah...",
+    options: ["Muhammadiyah", "Taman Siswa", "Nahdlatul Ulama", "Jamiatul Khair"],
+    answer: 1,
+    explanation: "Taman Siswa didirikan di Yogyakarta untuk memberikan kesempatan pendidikan bagi rakyat jelata, bukan hanya bagi kaum bangsawan atau pegawai Belanda."
+  },
+  {
+    q: "Rasa kebangsaan (nasionalisme) di Indonesia mulai tumbuh subur pada awal abad ke-20 karena dipengaruhi oleh faktor internal, yaitu...",
+    options: ["Kemenangan Jepang atas Rusia", "Lahirnya paham fasisme di Eropa", "Penderitaan rakyat akibat penjajahan dan munculnya golongan terpelajar", "Masuknya ideologi komunis"],
+    answer: 2,
+    explanation: "Edukasi dari Politik Etis melahirkan golongan terpelajar yang sadar akan penderitaan rakyat, sehingga mereka memimpin pergerakan nasional."
+  },
+  {
+    q: "Pencipta lagu kebangsaan Indonesia Raya yang pertama kali dikumandangkan pada Kongres Pemuda II adalah...",
+    options: ["W.R. Supratman", "Ismail Marzuki", "C. Simanjuntak", "Kusbini"],
+    answer: 0,
+    explanation: "Wage Rudolf Supratman memperdengarkan lagu Indonesia Raya dengan gesekan biolanya tanpa teks pada penutupan Kongres Pemuda II."
+  },
+  {
+    q: "Jati diri bangsa Indonesia tercermin dalam dasar negara yaitu...",
+    options: ["UUD 1945", "Pancasila", "Bhinneka Tunggal Ika", "Ketetapan MPR"],
+    answer: 1,
+    explanation: "Pancasila adalah falsafah, ideologi, dan jati diri bangsa yang mencakup nilai ketuhanan, kemানুsiaan, persatuan, kerakyatan, dan keadilan sosial."
+  },
+  {
+    q: "Salah satu upaya mempertahankan jati diri bangsa di era globalisasi adalah...",
+    options: ["Meniru semua gaya hidup dari luar negeri", "Meninggalkan budaya lokal karena dianggap kuno", "Menyaring (memfilter) budaya asing yang masuk sesuai dengan nilai Pancasila", "Menutup diri dari pergaulan internasional"],
+    answer: 2,
+    explanation: "Globalisasi tidak bisa dihindari, cara terbaik adalah menyaring budaya asing dan tetap melestarikan budaya bangsa."
+  },
+  {
+    q: "Kongres Perempuan Indonesia I yang diselenggarakan di Yogyakarta pada tanggal 22-25 Desember 1928 bertujuan untuk...",
+    options: ["Mempersiapkan kemerdekaan secara militer", "Memajukan nasib perempuan dan menggalang persatuan antar organisasi perempuan", "Membantu Jepang melawan Belanda", "Membentuk tentara wanita"],
+    answer: 1,
+    explanation: "Kongres ini merupakan tonggak sejarah bersatunya gerakan perempuan di Indonesia untuk memperjuangkan hak-hak perempuan dalam pendidikan dan pernikahan."
+  },
+  {
+    q: "Pada masa penjajahan Jepang, dibentuk organisasi semi-militer bentukan Jepang. Manakah yang bukan merupakan organisasi bentukan Jepang?",
+    options: ["Seinendan", "Keibodan", "PETA", "Sarekat Islam"],
+    answer: 3,
+    explanation: "Sarekat Islam adalah organisasi pergerakan nasional yang dibentuk pada masa penjajahan Belanda, bukan organisasi militer bentukan Jepang."
+  },
+  {
+    q: "Perjuangan bangsa Indonesia sebelum abad ke-20 (seperti Perang Diponegoro atau Perang Padri) sering kali mengalami kegagalan karena...",
+    options: ["Senjata bangsa Indonesia lebih modern", "Perjuangannya masih bersifat kedaerahan dan belum bersatu secara nasional", "Belanda dibantu oleh tentara Jepang", "Pemimpin perang mudah menyerah"],
+    answer: 1,
+    explanation: "Sebelum abad 20, perlawanan bersifat sporadis, lokal, dan bergantung pada kharisma satu tokoh. Jika tokohnya ditangkap, perlawanan berhenti."
+  },
+  {
+    q: "Sikap patriotisme di kalangan pelajar masa kini dapat diwujudkan dengan cara...",
+    options: ["Ikut tawuran untuk membela sekolah", "Membolos sekolah jika guru tidak disukai", "Belajar dengan rajin dan berprestasi membawa nama baik bangsa", "Mencoret-coret fasilitas umum"],
+    answer: 2,
+    explanation: "Patriotisme adalah cinta tanah air. Bagi pelajar, wujud nyatanya adalah belajar sungguh-sungguh untuk membangun bangsa."
+  },
+
+  // BAB 4: Pembangunan Perekonomian Indonesia (39-50)
+  {
+    q: "Badan usaha yang modalnya seluruh atau sebagian besar dimiliki oleh negara disebut...",
+    options: ["Koperasi", "BUMN", "BUMS", "CV"],
+    answer: 1,
+    explanation: "Badan Usaha Milik Negara (BUMN) adalah badan usaha yang modalnya berasal dari kekayaan negara yang dipisahkan, contoh: Pertamina, PLN."
+  },
+  {
+    q: "Berdasarkan Pasal 33 UUD 1945 ayat 1, perekonomian disusun sebagai usaha bersama berdasar atas asas...",
+    options: ["Kekeluargaan", "Persaingan bebas", "Monopoli", "Kapitalisme"],
+    answer: 0,
+    explanation: "Asas kekeluargaan merupakan ruh dari sistem ekonomi Indonesia, yang diwujudkan salah satunya dalam bentuk Koperasi."
+  },
+  {
+    q: "Bapak Koperasi Indonesia yang juga merupakan proklamator kemerdekaan adalah...",
+    options: ["Ir. Soekarno", "Drs. Mohammad Hatta", "Ki Hajar Dewantara", "Soedirman"],
+    answer: 1,
+    explanation: "Mohammad Hatta diberi gelar Bapak Koperasi karena perannya dalam merintis, memikirkan, dan memajukan koperasi di Indonesia sesuai asas kekeluargaan."
+  },
+  {
+    q: "Tujuan utama terjadinya perdagangan antarpulau di Indonesia adalah...",
+    options: ["Menguasai pulau lain", "Memperoleh keuntungan dan memenuhi kebutuhan barang yang tidak diproduksi di pulau sendiri", "Menghabiskan biaya transportasi", "Mengurangi jumlah penduduk"],
+    answer: 1,
+    explanation: "Setiap pulau memiliki sumber daya alam yang berbeda. Perdagangan antarpulau bertujuan untuk memenuhi kebutuhan distribusi barang dan mencari keuntungan ekonomi."
+  },
+  {
+    q: "Salah satu faktor pendorong terjadinya perdagangan antarnegara (internasional) adalah...",
+    options: ["Kebijakan menutup diri dari negara lain", "Adanya kesamaan sumber daya alam secara mutlak", "Perbedaan sumber daya alam, iklim, dan teknologi tiap negara", "Keinginan menjajah negara lain"],
+    answer: 2,
+    explanation: "Negara tidak bisa memenuhi semua kebutuhannya sendiri. Perbedaan SDA (misal: Indonesia punya sawit, Jepang punya teknologi mesin) mendorong perdagangan."
+  },
+  {
+    q: "Upaya pemerintah untuk meratakan pendapatan masyarakat, salah satunya dengan memungut pajak dari golongan kaya lalu menyalurkannya untuk subsidi masyarakat miskin. Kebijakan ini disebut...",
+    options: ["Redistribusi Pendapatan", "Inflasi", "Monopoli Ekonomi", "Deflasi"],
+    answer: 0,
+    explanation: "Redistribusi (pendistribusian kembali) pendapatan adalah usaha pemerintah dalam pemerataan ekonomi, contohnya pajak dan subsidi pupuk/BBM."
+  },
+  {
+    q: "Sektor agrikultur di Indonesia memegang peranan penting karena...",
+    options: ["Menyerap sebagian besar tenaga kerja Indonesia dan penyedia pangan nasional", "Merupakan sumber barang tambang yang mahal", "Menghasilkan mesin-mesin industri canggih", "Sebagai sektor pariwisata luar angkasa"],
+    answer: 0,
+    explanation: "Sebagai negara agraris, sebagian besar penduduk Indonesia bekerja di sektor pertanian yang memastikan ketahanan pangan."
+  },
+  {
+    q: "Pembangunan ekonomi yang baik tidak hanya dilihat dari peningkatan produksi barang, tetapi juga harus memperhatikan...",
+    options: ["Penurunan kualitas pendidikan", "Peningkatan utang negara", "Pemerataan hasil pembangunan dan peningkatan kesejahteraan rakyat", "Perusakan sumber daya alam"],
+    answer: 2,
+    explanation: "Pembangunan ekonomi yang sejati harus meningkatkan taraf hidup dan kesejahteraan sosial secara merata (mengurangi kemiskinan)."
+  },
+  {
+    q: "Berikut ini yang merupakan contoh redistribusi pendapatan dalam bentuk jaminan sosial adalah...",
+    options: ["Pembangunan mall mewah", "Program BPJS Kesehatan dan Program Keluarga Harapan (PKH)", "Pemberian izin tambang asing", "Pembangunan sirkuit balap"],
+    answer: 1,
+    explanation: "BPJS dan PKH adalah program jaring pengaman sosial pemerintah agar masyarakat menengah ke bawah bisa mengakses layanan kesehatan dan ekonomi."
+  },
+  {
+    q: "Kendala yang sering dihadapi dalam perdagangan antarpulau di Indonesia adalah...",
+    options: ["Infrastruktur pelayaran dan biaya logistik antar pulau yang masih mahal", "Masyarakat yang menolak barang dari pulau lain", "Tidak ada barang yang bisa diperjualbelikan", "Bahasa yang digunakan sangat berbeda sehingga tidak bisa berkomunikasi"],
+    answer: 0,
+    explanation: "Meskipun potensinya besar, biaya pengiriman barang (logistik) antarpulau seringkali lebih mahal dibandingkan mengirim barang ke luar negeri."
+  },
+  {
+    q: "Ekonomi kreatif merupakan sektor yang mengandalkan... sebagai modal utamanya.",
+    options: ["Sumber daya tambang", "Luas lahan pertanian", "Ide, kreativitas, dan kekayaan intelektual manusia", "Banyaknya jumlah buruh pabrik"],
+    answer: 2,
+    explanation: "Ekonomi kreatif (seperti game, fashion, kuliner, seni) bersumber pada ide dan kreativitas otak manusia, bukan semata pada SDA mentah."
+  },
+  {
+    q: "Tujuan dibentuknya Badan Usaha Milik Swasta (BUMS) dalam struktur ekonomi Indonesia adalah...",
+    options: ["Menguasai hajat hidup orang banyak secara monopoli", "Membantu pemerintah membuka lapangan kerja dan meningkatkan penerimaan pajak", "Mencetak uang secara mandiri", "Menggantikan peran koperasi"],
+    answer: 1,
+    explanation: "BUMS (seperti PT swasta) sangat vital perannya untuk menyerap tenaga kerja, menumbuhkan investasi, dan membayar pajak kepada negara."
+  }
+];
+
+export default function UjianIPS() {
+  // STATE MANAGEMENT
+  const [appState, setAppState] = useState('login'); // 'login', 'exam', 'result'
+  const [student, setStudent] = useState({ name: '', cls: '8 A' });
+  const [answers, setAnswers] = useState({}); // { questionIndex: selectedOptionIndex }
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(90 * 60); // 90 minutes in seconds
+  const [warnings, setWarnings] = useState(0);
+  const [violationList, setViolationList] = useState([]); // Menyimpan jenis pelanggaran spesifik
+  const [showWarningModal, setShowWarningModal] = useState(false);
+  const [warningMsg, setWarningMsg] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+  const [finalScore, setFinalScore] = useState({ score: 0, correct: 0, wrong: 0 });
+  const [isSubmittingToSheet, setIsSubmittingToSheet] = useState(false);
+
+  // URL GOOGLE APPS SCRIPT (GANTI DENGAN URL WEB APP ANDA SETELAH DEPLOY)
+  const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwiGTMHlRxumM3Z2P-m-U1FTuBOgOTSEFOtW9rL_IHsvBCGM_Ad5wd6YHHDNCDm9c14/exec"; 
+
+  // --- ANTI CHEATING LOGIC ---
+  useEffect(() => {
+    if (appState !== 'exam') return;
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        triggerWarning("Keluar tab/aplikasi");
+      }
+    };
+
+    const handleBlur = () => {
+      triggerWarning("Keluar fokus layar ujian (membuka pop-up/notifikasi/split screen)");
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("blur", handleBlur);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, [appState, warnings]);
+
+  const triggerWarning = useCallback((reason) => {
+    if (appState !== 'exam') return;
+    
+    setViolationList(prevList => {
+      const timestamp = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const markedReason = `${reason} (${timestamp})`;
+      const updatedList = [...prevList, markedReason];
+
+      setWarnings(prevWarnings => {
+        const newWarnings = prevWarnings + 1;
+        if (newWarnings >= 3) {
+          setWarningMsg(`PELANGGARAN MAKSIMAL! Ujian Anda diakhiri secara otomatis.`);
+          setShowWarningModal(true);
+          setTimeout(() => {
+            forceSubmitExam(newWarnings, updatedList);
+          }, 3000);
+        } else {
+          setWarningMsg(`PERINGATAN ${newWarnings}/3: Terdeteksi tindakan kecurangan:\n"${reason}"\n\nJangan mengulangi tindakan ini atau ujian akan ditutup otomatis!`);
+          setShowWarningModal(true);
+        }
+        return newWarnings;
+      });
+
+      return updatedList;
+    });
+  }, [appState]);
+
+  // --- TIMER LOGIC ---
+  useEffect(() => {
+    if (appState !== 'exam' || timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          forceSubmitExam(warnings, violationList);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [appState, timeLeft, warnings, violationList]);
+
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
+
+  // --- ACTIONS ---
+  const handleStart = (e) => {
+    e.preventDefault();
+    if (student.name.trim().length < 3) {
+      alert("Masukkan nama lengkap Anda!");
+      return;
+    }
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(err => console.log("Fullscreen ditolak"));
+    }
+    setAppState('exam');
+  };
+
+  const handleSelectOption = (qIndex, optIndex) => {
+    setAnswers(prev => ({ ...prev, [qIndex]: optIndex }));
+  };
+
+  const handleNext = () => {
+    if (currentIndex < questions.length - 1) setCurrentIndex(prev => prev + 1);
+  };
+
+  const handlePrev = () => {
+    if (currentIndex > 0) setCurrentIndex(prev => prev - 1);
+  };
+
+  const attemptSubmit = () => {
+    setShowSubmitConfirm(true);
+  };
+
+  const forceSubmitExam = (currentWarnings, currentViolations) => {
+    calculateAndFinish(currentWarnings, currentViolations);
+  };
+
+  const confirmSubmit = () => {
+    setShowSubmitConfirm(false);
+    calculateAndFinish(warnings, violationList);
+  };
+
+  const calculateAndFinish = async (finalWarnings, currentViolations = violationList) => {
+    let correct = 0;
+    let wrong = 0;
+    
+    questions.forEach((q, idx) => {
+      if (answers[idx] === q.answer) {
+        correct++;
+      } else {
+        wrong++;
+      }
+    });
+
+    const score = correct * 2;
+    setFinalScore({ score, correct, wrong });
+    setAppState('result');
+
+    if (document.fullscreenElement) {
+        document.exitFullscreen().catch(err => console.log(err));
+    }
+
+    setIsSubmittingToSheet(true);
+    try {
+      const payload = {
+        nama: student.name,
+        kelas: student.cls,
+        skor: score,
+        benar: correct,
+        salah: wrong,
+        pelanggaran: finalWarnings,
+        jenis_pelanggaran: currentViolations.length > 0 ? currentViolations.join("; ") : "Tidak ada pelanggaran"
+      };
+
+      fetch(GOOGLE_SHEET_API_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      }).then(() => {
+        console.log("Data terkirim ke spreadsheet");
+      }).catch(err => {
+        console.error("Gagal mengirim ke spreadsheet", err);
+      });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSubmittingToSheet(false);
+    }
+  };
+
+  // --- RENDERERS ---
+
+  if (appState === 'login') {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 font-sans">
+        <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border-t-8 border-blue-600">
+          <div className="text-center mb-6">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Tut_Wuri_Handayani_Logo.svg/200px-Tut_Wuri_Handayani_Logo.svg.png" alt="Logo" className="w-20 h-20 mx-auto mb-4" onError={(e) => e.target.style.display='none'}/>
+            <h1 className="text-2xl font-bold text-gray-800">UAS Genap IPS</h1>
+            <h2 className="text-lg text-gray-600">SMPN 38 Bandar Lampung</h2>
+            <p className="text-sm text-red-500 mt-2 font-medium bg-red-50 p-2 rounded">
+              Aplikasi dilengkapi sistem Anti-Kecurangan. <br/>Dilarang keluar/ganti tab selama ujian!
+            </p>
+          </div>
+
+          <form onSubmit={handleStart} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+              <input 
+                type="text" 
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                placeholder="Masukkan nama Anda..."
+                value={student.name}
+                onChange={(e) => setStudent({ ...student, name: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Kelas</label>
+              <select 
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                value={student.cls}
+                onChange={(e) => setStudent({ ...student, cls: e.target.value })}
+              >
+                <option value="8 A">8 A</option>
+                <option value="8 B">8 B</option>
+                <option value="8 C">8 C</option>
+                <option value="8 D">8 D</option>
+              </select>
+            </div>
+            <button 
+              type="submit" 
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 mt-4 flex justify-center items-center gap-2"
+            >
+              Mulai Ujian <ChevronRight size={20}/>
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  if (appState === 'exam') {
+    const q = questions[currentIndex];
+    const answeredCount = Object.keys(answers).length;
+    const isLastQuestion = currentIndex === questions.length - 1;
+
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col font-sans select-none">
+        {/* HEADER */}
+        <header className="bg-white shadow-sm p-4 sticky top-0 z-20 flex justify-between items-center border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 bg-gray-100 rounded-lg text-gray-700 hover:bg-gray-200"
+            >
+              <Menu size={24} />
+            </button>
+            <div className="hidden sm:block">
+              <div className="font-bold text-gray-800">{student.name}</div>
+              <div className="text-xs text-gray-500">Kelas {student.cls}</div>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <div className={`flex items-center gap-2 px-3 py-1 rounded-full font-bold ${timeLeft < 600 ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-700'}`}>
+              <Clock size={18} />
+              {formatTime(timeLeft)}
+            </div>
+            <div className={`flex items-center gap-1 font-bold ${warnings > 0 ? 'text-red-500' : 'text-gray-400'}`}>
+              <AlertTriangle size={18} />
+              <span className="hidden sm:inline">{warnings}/3</span>
+            </div>
+          </div>
+        </header>
+
+        {/* SIDEBAR (Daftar Soal) */}
+        {isSidebarOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex justify-end">
+            <div className="bg-white w-80 h-full shadow-2xl flex flex-col">
+              <div className="p-4 border-b flex justify-between items-center bg-blue-600 text-white">
+                <h3 className="font-bold">Daftar Soal ({answeredCount}/{questions.length})</h3>
+                <button onClick={() => setIsSidebarOpen(false)} className="p-1"><X size={24}/></button>
+              </div>
+              <div className="p-4 grid grid-cols-5 gap-2 overflow-y-auto flex-grow content-start">
+                {questions.map((_, idx) => {
+                  const isAnswered = answers[idx] !== undefined;
+                  const isActive = currentIndex === idx;
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => { setCurrentIndex(idx); setIsSidebarOpen(false); }}
+                      className={`
+                        w-10 h-10 rounded-lg text-sm font-bold flex items-center justify-center
+                        ${isActive ? 'ring-2 ring-blue-600 ring-offset-2' : ''}
+                        ${isAnswered ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'}
+                      `}
+                    >
+                      {idx + 1}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="p-4 border-t">
+                <button 
+                  onClick={attemptSubmit}
+                  className="w-full bg-red-600 text-white font-bold py-3 rounded-lg flex justify-center items-center gap-2 hover:bg-red-700"
+                >
+                  <Send size={18}/> Akhiri Ujian
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MAIN QUESTION AREA */}
+        <main className="flex-grow flex justify-center p-4 md:p-6 overflow-y-auto pb-24">
+          <div className="bg-white w-full max-w-3xl rounded-2xl shadow-sm border border-gray-200 p-6">
+            <div className="flex justify-between items-start mb-6">
+              <span className="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full">
+                Soal {currentIndex + 1} dari {questions.length}
+              </span>
+            </div>
+            
+            <p className="text-lg text-gray-800 mb-8 leading-relaxed font-medium">
+              {q.q}
+            </p>
+
+            <div className="space-y-3">
+              {q.options.map((opt, optIdx) => {
+                const isSelected = answers[currentIndex] === optIdx;
+                return (
+                  <div 
+                    key={optIdx}
+                    onClick={() => handleSelectOption(currentIndex, optIdx)}
+                    className={`
+                      p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center gap-3
+                      ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'}
+                    `}
+                  >
+                    <div className={`
+                      w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0
+                      ${isSelected ? 'border-blue-600' : 'border-gray-400'}
+                    `}>
+                      {isSelected && <div className="w-3 h-3 bg-blue-600 rounded-full" />}
+                    </div>
+                    <span className={`text-base ${isSelected ? 'text-blue-900 font-medium' : 'text-gray-700'}`}>
+                      {String.fromCharCode(65 + optIdx)}. {opt}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </main>
+
+        {/* FOOTER NAVIGATION */}
+        <footer className="bg-white border-t p-4 fixed bottom-0 w-full flex justify-between max-w-full">
+          <div className="flex w-full max-w-3xl mx-auto gap-2">
+             <button 
+                onClick={handlePrev}
+                disabled={currentIndex === 0}
+                className={`flex-1 py-3 px-4 rounded-lg flex items-center justify-center gap-2 font-bold transition
+                  ${currentIndex === 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}
+                `}
+              >
+                <ChevronLeft size={20}/> Sebelumnya
+              </button>
+              
+              {isLastQuestion ? (
+                 <button 
+                 onClick={attemptSubmit}
+                 className="flex-1 py-3 px-4 rounded-lg flex items-center justify-center gap-2 font-bold bg-green-600 text-white hover:bg-green-700 shadow-md"
+               >
+                 Selesai <Check size={20}/>
+               </button>
+              ) : (
+                <button 
+                  onClick={handleNext}
+                  className="flex-1 py-3 px-4 rounded-lg flex items-center justify-center gap-2 font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-md"
+                >
+                  Selanjutnya <ChevronRight size={20}/>
+                </button>
+              )}
+          </div>
+        </footer>
+
+        {/* MODALS */}
+        {showWarningModal && (
+          <div className="fixed inset-0 bg-red-900 bg-opacity-90 flex items-center justify-center z-50 p-4">
+            <div className="bg-white p-6 rounded-xl shadow-2xl max-w-sm text-center transform scale-105 transition-transform">
+              <AlertTriangle size={64} className="mx-auto text-red-500 mb-4 animate-bounce" />
+              <h2 className="text-2xl font-bold text-red-600 mb-2">PERINGATAN!</h2>
+              <p className="text-gray-800 font-medium mb-6 whitespace-pre-line">{warningMsg}</p>
+              {warnings < 3 && (
+                <button 
+                  onClick={() => setShowWarningModal(false)}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg"
+                >
+                  Saya Mengerti
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {showSubmitConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+            <div className="bg-white p-6 rounded-xl shadow-2xl max-w-sm text-center">
+              <h2 className="text-xl font-bold text-gray-800 mb-2">Konfirmasi Pengumpulan</h2>
+              <p className="text-gray-600 mb-6">
+                Anda telah menjawab <b>{answeredCount}</b> dari <b>{questions.length}</b> soal.
+                {questions.length - answeredCount > 0 && (
+                  <span className="block mt-2 text-red-600 font-bold bg-red-50 p-2 rounded">
+                    Masih ada {questions.length - answeredCount} soal yang belum dijawab!
+                  </span>
+                )}
+              </p>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setShowSubmitConfirm(false)}
+                  className="flex-1 bg-gray-200 text-gray-800 font-bold py-2 rounded-lg"
+                >
+                  Batal
+                </button>
+                <button 
+                  onClick={confirmSubmit}
+                  className="flex-1 bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700"
+                >
+                  Ya, Kumpulkan
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (appState === 'result') {
+    return (
+      <div className="min-h-screen bg-gray-100 p-4 font-sans pb-10">
+        <div className="max-w-3xl mx-auto">
+          {/* SKOR CARD */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 text-center border-t-8 border-green-500 mt-4">
+            <h1 className="text-2xl font-bold text-gray-800 mb-2">Ujian Selesai!</h1>
+            <p className="text-gray-600 mb-6">Terima kasih, <b>{student.name}</b> (Kelas {student.cls})</p>
+            
+            <div className="flex justify-center gap-4 mb-6">
+              <div className="bg-blue-50 p-4 rounded-xl min-w-[100px]">
+                <div className="text-sm text-blue-600 font-bold">NILAI</div>
+                <div className="text-4xl font-black text-blue-700">{finalScore.score}</div>
+              </div>
+              <div className="bg-green-50 p-4 rounded-xl min-w-[100px]">
+                <div className="text-sm text-green-600 font-bold">BENAR</div>
+                <div className="text-3xl font-bold text-green-700">{finalScore.correct}</div>
+              </div>
+              <div className="bg-red-50 p-4 rounded-xl min-w-[100px]">
+                <div className="text-sm text-red-600 font-bold">SALAH</div>
+                <div className="text-3xl font-bold text-red-700">{finalScore.wrong}</div>
+              </div>
+            </div>
+            
+            {warnings > 0 && (
+               <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm p-4 rounded-lg mb-4 text-left">
+                 <div className="font-bold flex items-center gap-2 mb-2">
+                   <AlertTriangle size={18}/> Riwayat Pelanggaran ({warnings} kali):
+                 </div>
+                 <ul className="list-disc list-inside text-xs space-y-1">
+                   {violationList.map((item, idx) => (
+                     <li key={idx} className="font-medium text-red-700">{item}</li>
+                   ))}
+                 </ul>
+               </div>
+            )}
+            
+            {isSubmittingToSheet && <p className="text-sm text-gray-500 animate-pulse">Menyimpan data ke server...</p>}
+          </div>
+
+          <h2 className="text-xl font-bold text-gray-800 mb-4 px-2">Review Jawaban & Pembahasan</h2>
+          
+          {/* REVIEW JAWABAN */}
+          <div className="space-y-4">
+            {questions.map((q, idx) => {
+              const userAnswerIdx = answers[idx];
+              const isCorrect = userAnswerIdx === q.answer;
+              const isUnanswered = userAnswerIdx === undefined;
+
+              return (
+                <div key={idx} className={`bg-white rounded-xl shadow-sm p-5 border-l-4 ${isCorrect ? 'border-green-500' : 'border-red-500'}`}>
+                  <div className="flex gap-3 items-start mb-3">
+                    <div className="mt-1">
+                      {isCorrect ? <CheckCircle className="text-green-500" size={24}/> : <XCircle className="text-red-500" size={24}/>}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-800">Soal {idx + 1}</h3>
+                      <p className="text-gray-700 mt-1">{q.q}</p>
+                    </div>
+                  </div>
+
+                  <div className="ml-9 space-y-2 text-sm">
+                    {/* Jawaban Siswa */}
+                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                      <span className="text-gray-500 font-medium">Jawaban Anda: </span>
+                      {isUnanswered ? (
+                        <span className="text-red-500 font-bold italic">Tidak Dijawab</span>
+                      ) : (
+                        <span className={isCorrect ? "text-green-700 font-bold" : "text-red-600 font-bold strike"}>
+                          {String.fromCharCode(65 + userAnswerIdx)}. {q.options[userAnswerIdx]}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Jika Salah, tampilkan jawaban benar */}
+                    {!isCorrect && (
+                      <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                        <span className="text-green-800 font-medium">Jawaban Benar: </span>
+                        <span className="text-green-700 font-bold">
+                           {String.fromCharCode(65 + q.answer)}. {q.options[q.answer]}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Penjelasan/Alasan */}
+                    <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 mt-2">
+                       <span className="text-blue-800 font-bold text-xs uppercase tracking-wider block mb-1">Pembahasan:</span>
+                       <span className="text-blue-900 leading-relaxed">
+                         {q.explanation}
+                       </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+}
